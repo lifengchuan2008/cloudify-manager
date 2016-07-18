@@ -367,6 +367,13 @@ def _update_es_node(es_node):
         node_data.setdefault('scaling_groups', {})
         node_data.setdefault('description', None)
 
+        if node_data['created_at']:
+            node_data['created_at'] = \
+                _convert_timestamp(node_data['created_at'])
+        if node_data['updated_at']:
+            node_data['updated_at'] = \
+                _convert_timestamp(node_data['updated_at'])
+
     if node_type == 'node':
         type_hierarchy = node_data.get('type_hierarchy', [])
         if COMPUTE_NODE_TYPE in type_hierarchy:
@@ -401,6 +408,48 @@ def _update_es_node(es_node):
     if node_type == 'blueprint':
         node_data.setdefault('description', '')
         node_data.setdefault('main_file_name', '')
+
+        if node_data['created_at']:
+            node_data['created_at'] = \
+                _convert_timestamp(node_data['created_at'])
+        if node_data['updated_at']:
+            node_data['updated_at'] = \
+                _convert_timestamp(node_data['updated_at'])
+
+    if node_type == 'snapshot' and node_data['created_at']:
+        node_data['created_at'] = _convert_timestamp(node_data['created_at'])
+
+    if node_type == 'execution' and node_data['created_at']:
+        node_data['created_at'] = _convert_timestamp(node_data['created_at'])
+
+    if node_type == 'deployment_modification':
+        if node_data['created_at']:
+            node_data['created_at'] = \
+                _convert_timestamp(node_data['created_at'])
+        if node_data['ended_at']:
+            node_data['ended_at'] = _convert_timestamp(node_data['ended_at'])
+
+    if node_type == 'deployment_update' and node_data['created_at']:
+        node_data['created_at'] = _convert_timestamp(node_data['created_at'])
+
+    if node_type == 'plugin' and node_data['uploaded_at']:
+        node_data['uploaded_at'] = _convert_timestamp(node_data['uploaded_at'])
+
+    try:
+        node_data['timestamp'] = \
+            _convert_timestamp(node_data['timestamp'][:-5])
+    except KeyError:
+        # no timestamp key
+        pass
+
+
+def _convert_timestamp(timestamp):
+    try:
+        timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        return timestamp
+    # Adding 'Z' to match ISO format
+    return '{0}Z'.format(timestamp.isoformat()[:-3])
 
 
 def _include_es_node(es_node, existing_plugins, new_plugins):
