@@ -196,6 +196,7 @@ def plugin_installable_on_current_platform(plugin):
     ]))
 
 
-def get_formatted_timestamp():
+def get_formatted_timestamp(timestamp=None):
+    timestamp = timestamp or datetime.now()
     # Adding 'Z' to match ISO format
-    return '{0}Z'.format(datetime.now().isoformat()[:-3])
+    return '{0}Z'.format(timestamp.isoformat()[:-3])

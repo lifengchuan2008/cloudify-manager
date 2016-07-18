@@ -14,7 +14,6 @@
 #  * limitations under the License.
 
 
-from datetime import datetime
 from itertools import dropwhile
 
 import mock
@@ -107,7 +106,8 @@ class ExecutionsTestCase(BaseServerTestCase):
             deployment_id='',
             workflow_id='',
             blueprint_id='',
-            created_at=datetime.now().isoformat(),
+            # adding an artificial microsecond
+            created_at=utils.get_formatted_timestamp().replace('Z', '1Z'),
             error='',
             parameters=dict(),
             is_system_workflow=False
@@ -118,24 +118,38 @@ class ExecutionsTestCase(BaseServerTestCase):
             deployment_id='',
             workflow_id='',
             blueprint_id='',
-            created_at=datetime.now().isoformat(),
+            created_at=utils.get_formatted_timestamp().replace('Z', '2Z'),
+            error='',
+            parameters=dict(),
+            is_system_workflow=False
+        )
+        execution3 = models.Execution(
+            id='2',
+            status=models.Execution.TERMINATED,
+            deployment_id='',
+            workflow_id='',
+            blueprint_id='',
+            created_at=utils.get_formatted_timestamp().replace('Z', '3Z'),
             error='',
             parameters=dict(),
             is_system_workflow=False
         )
         storage_manager._get_instance().put_execution('0', execution1)
         storage_manager._get_instance().put_execution('1', execution2)
+        storage_manager._get_instance().put_execution('2', execution3)
 
         executions = self.client.executions.list(sort='created_at')
-        self.assertEqual(2, len(executions))
+        self.assertEqual(3, len(executions))
         self.assertEqual('0', executions[0].id)
         self.assertEqual('1', executions[1].id)
+        self.assertEqual('2', executions[2].id)
 
         executions = self.client.executions.list(
             sort='created_at', is_descending=True)
-        self.assertEqual(2, len(executions))
-        self.assertEqual('1', executions[0].id)
-        self.assertEqual('0', executions[1].id)
+        self.assertEqual(3, len(executions))
+        self.assertEqual('2', executions[0].id)
+        self.assertEqual('1', executions[1].id)
+        self.assertEqual('0', executions[2].id)
 
     @attr(client_min_version=2,
           client_max_version=LATEST_API_VERSION)

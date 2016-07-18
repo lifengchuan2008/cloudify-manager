@@ -38,6 +38,7 @@ from cloudify_system_workflows.deployment_environment import \
     generate_create_dep_tasks_graph
 from cloudify_system_workflows import plugins
 from cloudify.utils import ManagerVersion
+from manager_rest import utils
 
 
 _METADATA_FILE = 'metadata.json'
@@ -496,6 +497,13 @@ def _restore_elasticsearch(tempdir, es, metadata, bulk_read_timeout):
             elem = json.loads(line)
             if _include_es_node(elem, existing_plugins, new_plugins):
                 _update_es_node(elem)
+                if '_source' in elem and 'timestamp' in elem['_source']:
+                    # converting old timestamp format to new
+                    elem['_source']['timestamp'] = \
+                        utils.get_formatted_timestamp(
+                            datetime.strptime(
+                                elem['_source']['timestamp'][:-5],
+                                '%Y-%m-%d %H:%M:%S.%f'))
                 yield elem
 
     _check_conflicts(es, get_data_itr())
